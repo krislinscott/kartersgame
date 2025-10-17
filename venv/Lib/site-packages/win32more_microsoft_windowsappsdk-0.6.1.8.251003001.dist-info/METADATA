@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: win32more-Microsoft.WindowsAppSDK
+Version: 0.6.1.8.251003001
+License-File: LICENSE (Microsoft.WindowsAppSDK).txt
+Requires-Dist: win32more-microsoft-web-webview2<0.7,>=0.6.1.0.3179.45
+Requires-Dist: win32more==0.6.*

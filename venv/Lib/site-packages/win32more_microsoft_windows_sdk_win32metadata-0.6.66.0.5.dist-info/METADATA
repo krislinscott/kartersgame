@@ -1,0 +1,4 @@
+Metadata-Version: 2.4
+Name: win32more-Microsoft.Windows.SDK.Win32Metadata
+Version: 0.6.66.0.5
+Requires-Dist: win32more==0.6.*

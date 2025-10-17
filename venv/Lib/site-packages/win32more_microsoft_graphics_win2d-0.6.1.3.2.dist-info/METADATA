@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: win32more-Microsoft.Graphics.Win2D
+Version: 0.6.1.3.2
+License-File: LICENSE (Microsoft.Web.WebView2).txt
+Requires-Dist: win32more-microsoft-windowsappsdk<0.7,>=0.6.1.6.241114003
+Requires-Dist: win32more==0.6.*
