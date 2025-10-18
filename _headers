@@ -1,0 +1,14 @@
+/*
+  Content-Type: text/html; charset=utf-8
+
+/*.wasm
+  Content-Type: application/wasm
+
+/*.data
+  Content-Type: application/octet-stream
+
+/*.js
+  Content-Type: application/javascript
+
+/*.json
+  Content-Type: application/json

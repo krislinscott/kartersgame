@@ -5,6 +5,7 @@ services:
     buildCommand: |
       pip install pygbag --upgrade
       pygbag main.py
+      cp _headers build/_headers
     publishDir: build
     staticPublishPath: build
     headers:
