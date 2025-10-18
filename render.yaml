@@ -1,0 +1,13 @@
+services:
+  - type: static
+    name: bevo-showdown
+    env: python
+    buildCommand: |
+      pip install pygbag --upgrade
+      pygbag main.py
+    publishDir: build
+    staticPublishPath: build
+    headers:
+      - path: /*
+        name: Content-Type
+        value: application/wasm
