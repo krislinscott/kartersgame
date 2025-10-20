@@ -26,6 +26,7 @@ Build for the web:
 # ------------------------------
 # Config
 # ------------------------------
+WORLD_WIDTH = 5000
 VIRTUAL_W, VIRTUAL_H = 900, 540
 FPS = 60
 GRAVITY = 0.7
@@ -48,6 +49,8 @@ AS_BEVO = "assets/bevo.png"
 AS_ENEMY = "assets/ou_defender.png"
 AS_FOOTBALL = "assets/football.png"
 AS_GRUNT = "assets/grunt.wav"
+AS_BG = "assets/stadium_background.png"
+BG_IMG = None
 
 pygame.init()
 
@@ -98,6 +101,15 @@ def load_images():
         FOOTBALL_IMG = pygame.transform.smoothscale(fb_raw, (w, FOOTBALL_HEIGHT))
     except Exception:
         FOOTBALL_IMG = None
+    
+    global BG_IMG
+    try:
+        bg_raw = pygame.image.load(AS_BG).convert()
+        BG_IMG = pygame.transform.scale(bg_raw, (VIRTUAL_W, VIRTUAL_H))
+    except Exception:
+        BG_IMG = None
+
+
 
 
 load_images()
@@ -121,7 +133,9 @@ PLATFORMS = [
     pygame.Rect(300, VIRTUAL_H - 320, 180, 20),
 ]
 
-FLAG_RECT = pygame.Rect(VIRTUAL_W - 70, VIRTUAL_H - 160, 20, 120)
+#FLAG_RECT = pygame.Rect(VIRTUAL_W - 70, VIRTUAL_H - 160, 20, 120)
+FLAG_RECT = pygame.Rect(WORLD_WIDTH - 70, VIRTUAL_H - 160, 20, 120)
+
 
 FOOTBALLS = []
 
@@ -244,6 +258,22 @@ class Enemy:
         else:
             pygame.draw.rect(surf, (50, 50, 50), self.rect)
 
+    def draw_offset(self, surf, camera_x):
+        if self.img_r is not None:
+            img = self.img_r if self.facing_right else self.img_l
+            if self.state == "pause" and self.flex_this_pause:
+                scale = 1.12
+                w = int(img.get_width() * scale)
+                h = int(img.get_height() * scale)
+                flex_img = pygame.transform.smoothscale(img, (w, h))
+                draw_x = self.rect.centerx - flex_img.get_width() // 2 - camera_x
+                draw_y = self.rect.bottom - flex_img.get_height()
+                surf.blit(flex_img, (draw_x, draw_y))
+            else:
+                surf.blit(img, (self.rect.x - camera_x, self.rect.y))
+        else:
+            pygame.draw.rect(surf, (50, 50, 50), pygame.Rect(self.rect.x - camera_x, self.rect.y, self.rect.w, self.rect.h))
+
 
 ENEMIES = [
     Enemy(100, PLATFORMS[0].top, speed=1.4),
@@ -345,10 +375,34 @@ class Player:
         if self.lives < 0:
             self.lives = 0
 
+    def draw_offset(self, surf, camera_x):
+        if self.invuln_timer > 0 and (self.invuln_timer // 4) % 2 == 0:
+            return
+        if BEVO_RIGHT is not None:
+            img = self.img_r if self.facing_right else self.img_l
+            surf.blit(img, (self.rect.x - camera_x, self.rect.y))
+        else:
+            pygame.draw.rect(surf, (220, 20, 60), pygame.Rect(self.rect.x - camera_x, self.rect.y, self.rect.w, self.rect.h))
 
 # ------------------------------
 # Game helpers
 # ------------------------------
+
+def reset_game(player):
+    """Fully reset the game state: lives, score, enemies, footballs, etc."""
+    player.lives = 3
+    player.score = 0
+    player.invuln_timer = 0
+    place_footballs()
+    player.coins_total = len(FOOTBALLS)
+    player.spawn()
+
+    ENEMIES[:] = [
+        Enemy(100, PLATFORMS[0].top, speed=1.4),
+        Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
+        Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
+    ]
+    place_footballs()
 
 def reset_level(player):
     player.spawn()
@@ -360,26 +414,36 @@ def reset_level(player):
     place_footballs()
 
 
-def draw_world(surf):
-    surf.fill(SKY)
-    # Platforms
+def draw_world(surf, camera_x):
+    # Draw scrolling background
+    if BG_IMG:
+        bg_scaled = pygame.transform.scale(BG_IMG, (WORLD_WIDTH, VIRTUAL_H))
+        surf.blit(bg_scaled, (-camera_x, 0))
+    else:
+        surf.fill(SKY)
+
+    # Draw platforms
     for p in PLATFORMS:
-        pygame.draw.rect(surf, BLOCK, p)
-        top = pygame.Rect(p.x, p.y, p.w, 4)
+        pygame.draw.rect(surf, BLOCK, (p.x - camera_x, p.y, p.w, p.h))
+        top = pygame.Rect(p.x - camera_x, p.y, p.w, 4)
         pygame.draw.rect(surf, (170, 140, 100), top)
-    # Ground
-    pygame.draw.rect(surf, GROUND_BROWN, PLATFORMS[0])
-    # Footballs
+
+    # Draw ground
+    pygame.draw.rect(surf, GROUND_BROWN, (PLATFORMS[0].x - camera_x, PLATFORMS[0].y, PLATFORMS[0].w, PLATFORMS[0].h))
+
+    # Draw footballs
     for r in FOOTBALLS:
         if FOOTBALL_IMG is not None:
-            pos = (r.centerx - FOOTBALL_IMG.get_width() // 2, r.centery - FOOTBALL_IMG.get_height() // 2)
+            pos = (r.centerx - FOOTBALL_IMG.get_width() // 2 - camera_x, r.centery - FOOTBALL_IMG.get_height() // 2)
             surf.blit(FOOTBALL_IMG, pos)
         else:
-            pygame.draw.ellipse(surf, (200, 120, 40), r)
-    # Flag
-    pygame.draw.rect(surf, FLAG, FLAG_RECT)
-    pole = pygame.Rect(FLAG_RECT.centerx - 2, FLAG_RECT.top - 100, 4, 100)
+            pygame.draw.ellipse(surf, (200, 120, 40), pygame.Rect(r.x - camera_x, r.y, r.w, r.h))
+
+    # Draw flag
+    pygame.draw.rect(surf, FLAG, (FLAG_RECT.x - camera_x, FLAG_RECT.y, FLAG_RECT.w, FLAG_RECT.h))
+    pole = pygame.Rect(FLAG_RECT.centerx - 2 - camera_x, FLAG_RECT.top - 100, 4, 100)
     pygame.draw.rect(surf, (200, 255, 200), pole)
+
 
 
 def draw_hud(surf, player, msg=None):
@@ -481,8 +545,8 @@ async def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 if event.key == pygame.K_r:
-                    reset_level(player)
-                    message = "Level reset"
+                    reset_game(player)
+                    message = "Game reset - good luck, Bevo!"
                     message_timer = FPS
                 if event.key in (pygame.K_LEFT, pygame.K_a):
                     move_left = True
@@ -558,10 +622,20 @@ async def main():
         won = check_win(player)
 
         # --- Draw to virtual surface ---
-        draw_world(virtual)
+        # --- Camera logic ---
+        camera_x = player.rect.centerx - VIRTUAL_W // 2
+        camera_x = max(0, min(camera_x, WORLD_WIDTH - VIRTUAL_W))  # clamp camera
+
+        # --- Draw to virtual surface ---
+        draw_world(virtual, camera_x)
+
+        # Draw enemies with offset
         for e in ENEMIES:
-            e.draw(virtual)
-        player.draw(virtual)
+            e.draw_offset(virtual, camera_x)
+
+        # Draw player with offset
+        player.draw_offset(virtual, camera_x)
+
 
         state_msg = None
         if message_timer > 0:
