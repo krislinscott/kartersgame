@@ -49,8 +49,10 @@ AS_BEVO = "assets/bevo.png"
 AS_ENEMY = "assets/ou_defender.png"
 AS_FOOTBALL = "assets/football.png"
 AS_GRUNT = "assets/grunt.wav"
-AS_BG = "assets/stadium_background.png"
-BG_IMG = None
+AS_BG = "assets/stadium_background.png"  # <-- your stadium image
+BG_IMG_SLOW = None
+BG_IMG_FAST = None
+
 
 pygame.init()
 
@@ -102,12 +104,15 @@ def load_images():
     except Exception:
         FOOTBALL_IMG = None
     
-    global BG_IMG
+    global BG_IMG_SLOW, BG_IMG_FAST
     try:
         bg_raw = pygame.image.load(AS_BG).convert()
-        BG_IMG = pygame.transform.scale(bg_raw, (VIRTUAL_W, VIRTUAL_H))
+        # Use WORLD_WIDTH if you added it; otherwise fall back to screen width
+        bg_w = int(globals().get("WORLD_WIDTH", VIRTUAL_W))
+        BG_IMG_SLOW = pygame.transform.scale(bg_raw, (bg_w, VIRTUAL_H))
+        BG_IMG_FAST = pygame.transform.scale(bg_raw, (bg_w, VIRTUAL_H))
     except Exception:
-        BG_IMG = None
+        BG_IMG_SLOW = BG_IMG_FAST = None
 
 
 
@@ -125,12 +130,23 @@ def draw_text(surf, text, x, y, color=UI):
 # Level geometry
 # ------------------------------
 PLATFORMS = [
-    pygame.Rect(0, VIRTUAL_H - 40, VIRTUAL_W, 40),              # ground
+    pygame.Rect(0, VIRTUAL_H - 40, WORLD_WIDTH, 40),              # extend full ground length
     pygame.Rect(80, VIRTUAL_H - 120, 120, 20),
     pygame.Rect(260, VIRTUAL_H - 190, 120, 20),
     pygame.Rect(460, VIRTUAL_H - 150, 120, 20),
     pygame.Rect(640, VIRTUAL_H - 220, 140, 20),
     pygame.Rect(300, VIRTUAL_H - 320, 180, 20),
+    pygame.Rect(700, VIRTUAL_H - 410, 180, 20),
+    pygame.Rect(800, VIRTUAL_H - 300, 180, 20),
+    pygame.Rect(900, VIRTUAL_H - 150, 180, 20),
+    pygame.Rect(1000, VIRTUAL_H - 400, 180, 20),
+    pygame.Rect(1200, VIRTUAL_H - 275, 180, 20),
+    pygame.Rect(1400, VIRTUAL_H - 320, 180, 20),
+    pygame.Rect(1650, VIRTUAL_H - 215, 180, 20),
+    pygame.Rect(1800, VIRTUAL_H - 100, 180, 20),
+    pygame.Rect(2050, VIRTUAL_H - 420, 180, 20),
+    pygame.Rect(2300, VIRTUAL_H - 293, 180, 20),
+    pygame.Rect(2450, VIRTUAL_H - 360, 180, 20),
 ]
 
 #FLAG_RECT = pygame.Rect(VIRTUAL_W - 70, VIRTUAL_H - 160, 20, 120)
@@ -415,23 +431,27 @@ def reset_level(player):
 
 
 def draw_world(surf, camera_x):
-    # Draw scrolling background
-    if BG_IMG:
-        bg_scaled = pygame.transform.scale(BG_IMG, (WORLD_WIDTH, VIRTUAL_H))
-        surf.blit(bg_scaled, (-camera_x, 0))
-    else:
-        surf.fill(SKY)
+    # Parallax background (two layers at different speeds)
+    if BG_IMG_SLOW:
+        # Slow layer (far background, e.g. distant stadium/sky)
+        offset_slow = int(camera_x * 0.3)
+        surf.blit(BG_IMG_SLOW, (-offset_slow, 0))
 
-    # Draw platforms
+    if BG_IMG_FAST:
+        # Faster layer (closer background, e.g. crowd/walls)
+        offset_fast = int(camera_x * 0.6)
+        surf.blit(BG_IMG_FAST, (-offset_fast, 0))
+
+    # Platforms
     for p in PLATFORMS:
         pygame.draw.rect(surf, BLOCK, (p.x - camera_x, p.y, p.w, p.h))
         top = pygame.Rect(p.x - camera_x, p.y, p.w, 4)
         pygame.draw.rect(surf, (170, 140, 100), top)
 
-    # Draw ground
+    # Ground
     pygame.draw.rect(surf, GROUND_BROWN, (PLATFORMS[0].x - camera_x, PLATFORMS[0].y, PLATFORMS[0].w, PLATFORMS[0].h))
 
-    # Draw footballs
+    # Footballs
     for r in FOOTBALLS:
         if FOOTBALL_IMG is not None:
             pos = (r.centerx - FOOTBALL_IMG.get_width() // 2 - camera_x, r.centery - FOOTBALL_IMG.get_height() // 2)
@@ -439,10 +459,11 @@ def draw_world(surf, camera_x):
         else:
             pygame.draw.ellipse(surf, (200, 120, 40), pygame.Rect(r.x - camera_x, r.y, r.w, r.h))
 
-    # Draw flag
+    # Flag
     pygame.draw.rect(surf, FLAG, (FLAG_RECT.x - camera_x, FLAG_RECT.y, FLAG_RECT.w, FLAG_RECT.h))
     pole = pygame.Rect(FLAG_RECT.centerx - 2 - camera_x, FLAG_RECT.top - 100, 4, 100)
     pygame.draw.rect(surf, (200, 255, 200), pole)
+
 
 
 
