@@ -1,5 +1,6 @@
 import pygame
 import asyncio
+import random
 
 """
 Bevo vs. OU — Web/HTML5 Build (PyGBag ready)
@@ -130,24 +131,51 @@ def draw_text(surf, text, x, y, color=UI):
 # Level geometry
 # ------------------------------
 PLATFORMS = [
-    pygame.Rect(0, VIRTUAL_H - 40, WORLD_WIDTH, 40),              # extend full ground length
-    pygame.Rect(80, VIRTUAL_H - 120, 120, 20),
-    pygame.Rect(260, VIRTUAL_H - 190, 120, 20),
-    pygame.Rect(460, VIRTUAL_H - 150, 120, 20),
-    pygame.Rect(640, VIRTUAL_H - 220, 140, 20),
-    pygame.Rect(300, VIRTUAL_H - 320, 180, 20),
-    pygame.Rect(700, VIRTUAL_H - 410, 180, 20),
-    pygame.Rect(800, VIRTUAL_H - 300, 180, 20),
-    pygame.Rect(900, VIRTUAL_H - 150, 180, 20),
-    pygame.Rect(1000, VIRTUAL_H - 400, 180, 20),
-    pygame.Rect(1200, VIRTUAL_H - 275, 180, 20),
-    pygame.Rect(1400, VIRTUAL_H - 320, 180, 20),
-    pygame.Rect(1650, VIRTUAL_H - 215, 180, 20),
-    pygame.Rect(1800, VIRTUAL_H - 100, 180, 20),
-    pygame.Rect(2050, VIRTUAL_H - 420, 180, 20),
-    pygame.Rect(2300, VIRTUAL_H - 293, 180, 20),
-    pygame.Rect(2450, VIRTUAL_H - 360, 180, 20),
+    pygame.Rect(0, VIRTUAL_H - 40, 5000, 40),  # full ground floor
+
+    # --- Zone 1 (0–1000): warm-up section ---
+    pygame.Rect(100,  VIRTUAL_H - 100, 160, 20),
+    pygame.Rect(300,  VIRTUAL_H - 180, 140, 20),
+    pygame.Rect(550,  VIRTUAL_H - 260, 150, 20),
+    pygame.Rect(750,  VIRTUAL_H - 180, 160, 20),
+    pygame.Rect(950,  VIRTUAL_H - 300, 140, 20),
+
+    # --- Zone 2 (1000–2000): mid-height variety ---
+    pygame.Rect(1150, VIRTUAL_H - 220, 180, 20),
+    pygame.Rect(1350, VIRTUAL_H - 320, 160, 20),
+    pygame.Rect(1550, VIRTUAL_H - 140, 160, 20),
+    pygame.Rect(1750, VIRTUAL_H - 240, 200, 20),
+    pygame.Rect(1950, VIRTUAL_H - 160, 180, 20),
+    pygame.Rect(1850, VIRTUAL_H - 80, 120, 20),  # low bounce recovery
+
+    # --- Zone 3 (2000–3000): layered climb zone ---
+    pygame.Rect(2100, VIRTUAL_H - 300, 160, 20),
+    pygame.Rect(2300, VIRTUAL_H - 220, 160, 20),
+    pygame.Rect(2500, VIRTUAL_H - 140, 180, 20),
+    pygame.Rect(2650, VIRTUAL_H - 240, 180, 20),
+    pygame.Rect(2800, VIRTUAL_H - 100, 180, 20),
+    pygame.Rect(2950, VIRTUAL_H - 320, 140, 20),
+
+    # --- Zone 4 (3000–4000): vertical maze (stadium mid section) ---
+    pygame.Rect(3100, VIRTUAL_H - 260, 180, 20),
+    pygame.Rect(3300, VIRTUAL_H - 180, 160, 20),
+    pygame.Rect(3500, VIRTUAL_H - 320, 200, 20),
+    pygame.Rect(3700, VIRTUAL_H - 240, 180, 20),
+    pygame.Rect(3850, VIRTUAL_H - 120, 160, 20),
+    pygame.Rect(3950, VIRTUAL_H - 340, 150, 20),  # top “sky box”
+
+    # --- Zone 5 (4000–5000): finale ramp to flag ---
+    pygame.Rect(4100, VIRTUAL_H - 200, 180, 20),
+    pygame.Rect(4300, VIRTUAL_H - 280, 200, 20),
+    pygame.Rect(4500, VIRTUAL_H - 160, 180, 20),
+    pygame.Rect(4700, VIRTUAL_H - 260, 200, 20),
+    pygame.Rect(4900, VIRTUAL_H - 140, 180, 20),
+    pygame.Rect(5050, VIRTUAL_H - 320, 180, 20),  # final jump-up
+
 ]
+
+
+
 
 #FLAG_RECT = pygame.Rect(VIRTUAL_W - 70, VIRTUAL_H - 160, 20, 120)
 FLAG_RECT = pygame.Rect(WORLD_WIDTH - 70, VIRTUAL_H - 160, 20, 120)
@@ -155,19 +183,118 @@ FLAG_RECT = pygame.Rect(WORLD_WIDTH - 70, VIRTUAL_H - 160, 20, 120)
 
 FOOTBALLS = []
 
+# Game state variables
+flag_reached = False
+win_animation_time = 0.0
+confetti_particles = []
+
+# Death animation variables
+death_animation_active = False
+death_animation_time = 0.0
+death_launch_velocity = -18  # Initial upward velocity for death launch
+
+class ConfettiParticle:
+    def __init__(self, x, y, img=None):
+        self.x = x
+        self.y = y
+        self.vx = random.uniform(-2, 2)  # Horizontal drift
+        self.vy = random.uniform(1, 4)   # Falling speed
+        self.rotation = random.uniform(0, 360)  # Initial rotation
+        self.rotation_speed = random.uniform(-5, 5)  # Rotation speed
+        self.life_time = random.uniform(8, 12)  # How long it stays on screen
+        self.age = 0
+        
+        # Make confetti smaller
+        self.size_scale = random.uniform(0.3, 0.6)  # 30-60% of original size
+        
+        if img is not None:
+            # Scale down the confetti image
+            orig_w, orig_h = img.get_size()
+            new_w = max(5, int(orig_w * self.size_scale))
+            new_h = max(5, int(orig_h * self.size_scale))
+            self.img = pygame.transform.smoothscale(img, (new_w, new_h))
+        else:
+            # Fallback rectangle size
+            self.img = None
+            self.size = random.randint(3, 8)  # Small rectangles
+            self.color = random.choice([
+                (255, 165, 0),   # Orange
+                (255, 140, 0),   # Dark orange
+                (255, 215, 0),   # Gold
+                (255, 69, 0),    # Red-orange
+                (255, 99, 71)    # Tomato
+            ])
+    
+    def update(self, dt):
+        # Update position
+        self.x += self.vx * dt * 60  # Scale by fps for consistent movement
+        self.y += self.vy * dt * 60
+        
+        # Update rotation
+        self.rotation += self.rotation_speed * dt * 60
+        
+        # Add some air resistance and gravity variation
+        self.vy += random.uniform(-0.1, 0.2) * dt * 60
+        
+        # Age the particle
+        self.age += dt
+        
+        # Return True if particle should be removed
+        return self.age >= self.life_time
+    
+    def draw(self, surf):
+        if self.img is not None:
+            # Rotate the image
+            rotated_img = pygame.transform.rotate(self.img, self.rotation)
+            # Calculate position to center the rotated image
+            rect = rotated_img.get_rect(center=(int(self.x), int(self.y)))
+            surf.blit(rotated_img, rect.topleft)
+        else:
+            # Draw simple rotating rectangle
+            # Create a small surface for the rectangle
+            rect_surf = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+            pygame.draw.rect(rect_surf, self.color, (0, 0, self.size, self.size))
+            # Rotate and blit
+            rotated_rect = pygame.transform.rotate(rect_surf, self.rotation)
+            rect_pos = rotated_rect.get_rect(center=(int(self.x), int(self.y)))
+            surf.blit(rotated_rect, rect_pos.topleft)
+
 
 def place_footballs():
     global FOOTBALLS
-    FOOTBALLS = [
-        pygame.Rect(120, VIRTUAL_H - 155, 18, 12),  # near first platform
-        pygame.Rect(300, VIRTUAL_H - 225, 18, 12),
-        pygame.Rect(520, VIRTUAL_H - 185, 18, 12),
-        pygame.Rect(700, VIRTUAL_H - 255, 18, 12),
-        pygame.Rect(380, VIRTUAL_H - 355, 18, 12),
-        pygame.Rect(60, VIRTUAL_H - 80, 18, 12),
-        pygame.Rect(460, VIRTUAL_H - 80, 18, 12),
-        pygame.Rect(820, VIRTUAL_H - 80, 18, 12),
-    ]
+FOOTBALLS = [
+    # --- Zone 1 ---
+    pygame.Rect(180,  VIRTUAL_H - 140, 18, 12),
+    pygame.Rect(400,  VIRTUAL_H - 220, 18, 12),
+    pygame.Rect(720,  VIRTUAL_H - 200, 18, 12),
+    pygame.Rect(940,  VIRTUAL_H - 340, 18, 12),
+
+    # --- Zone 2 ---
+    pygame.Rect(1220, VIRTUAL_H - 260, 18, 12),
+    pygame.Rect(1480, VIRTUAL_H - 180, 18, 12),
+    pygame.Rect(1720, VIRTUAL_H - 280, 18, 12),
+    pygame.Rect(1920, VIRTUAL_H - 100, 18, 12),
+
+    # --- Zone 3 ---
+    pygame.Rect(2200, VIRTUAL_H - 340, 18, 12),
+    pygame.Rect(2380, VIRTUAL_H - 260, 18, 12),
+    pygame.Rect(2600, VIRTUAL_H - 180, 18, 12),
+    pygame.Rect(2900, VIRTUAL_H - 360, 18, 12),
+
+    # --- Zone 4 ---
+    pygame.Rect(3150, VIRTUAL_H - 300, 18, 12),
+    pygame.Rect(3550, VIRTUAL_H - 360, 18, 12),
+    pygame.Rect(3800, VIRTUAL_H - 160, 18, 12),
+
+    # --- Zone 5 ---
+    pygame.Rect(4220, VIRTUAL_H - 240, 18, 12),
+    pygame.Rect(4470, VIRTUAL_H - 200, 18, 12),
+    pygame.Rect(4720, VIRTUAL_H - 300, 18, 12),
+    pygame.Rect(4980, VIRTUAL_H - 200, 18, 12),   # brought in and lowered
+]
+
+
+
 
 
 place_footballs()
@@ -292,10 +419,27 @@ class Enemy:
 
 
 ENEMIES = [
-    Enemy(100, PLATFORMS[0].top, speed=1.4),
-    Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
-    Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
+    # Zone 1
+    Enemy(300,  PLATFORMS[1].top,  speed=1.2),
+    Enemy(800,  PLATFORMS[4].top,  speed=1.2),
+
+    # Zone 2
+    Enemy(1400, PLATFORMS[7].top,  speed=1.3),
+    Enemy(1750, PLATFORMS[9].top,  speed=1.3),
+
+    # Zone 3
+    Enemy(2300, PLATFORMS[12].top, speed=1.3),
+    Enemy(2650, PLATFORMS[14].top, speed=1.3),
+
+    # Zone 4
+    Enemy(3300, PLATFORMS[17].top, speed=1.4),
+    Enemy(3750, PLATFORMS[20].top, speed=1.4),
+
+    # Zone 5
+    Enemy(4400, PLATFORMS[24].top, speed=1.5),
+    Enemy(4850, PLATFORMS[26].top, speed=1.5),
 ]
+
 
 # ------------------------------
 # Player
@@ -307,6 +451,11 @@ class Player:
         self.facing_right = True
         self.invuln_timer = 0
         self.coins_total = len(FOOTBALLS)
+        # Death animation state
+        self.is_dying = False
+        self.death_vx = 0
+        self.death_vy = 0
+        self.death_started = False
         self.spawn()
 
     def spawn(self):
@@ -356,6 +505,11 @@ class Player:
                     self.vy = 0
 
     def update(self, dt, left, right, jump):
+        # If dying, only update death animation
+        if self.is_dying:
+            return self.update_death_animation(dt)
+        
+        # Normal gameplay update
         self.handle_input(left, right, jump)
         self.apply_gravity()
         self.rect.x += int(self.vx)
@@ -372,6 +526,8 @@ class Player:
 
         if self.invuln_timer > 0:
             self.invuln_timer -= 1
+        
+        return False  # Not dying, so return False
 
     def draw(self, surf):
         if self.invuln_timer > 0 and (self.invuln_timer // 4) % 2 == 0:
@@ -388,8 +544,37 @@ class Player:
         self.lives -= 1
         self.invuln_timer = FPS
         self.rect.y -= 10
-        if self.lives < 0:
+        if self.lives <= 0:
             self.lives = 0
+            # Trigger death animation on final life lost
+            if not self.is_dying:
+                self.start_death_animation()
+
+    def start_death_animation(self):
+        """Start the Mario-style death animation"""
+        global death_animation_active, death_animation_time
+        self.is_dying = True
+        self.death_started = True
+        death_animation_active = True
+        death_animation_time = 0.0
+        # Launch Bevo upward with slight horizontal movement
+        self.death_vy = death_launch_velocity
+        self.death_vx = 2 if self.facing_right else -2  # Slight horizontal drift
+
+    def update_death_animation(self, dt):
+        """Update the death animation physics"""
+        if not self.is_dying:
+            return False
+        
+        # Apply gravity to death velocity
+        self.death_vy += GRAVITY * 1.5  # Faster gravity for death fall
+        
+        # Update position
+        self.rect.x += int(self.death_vx * dt * 60)
+        self.rect.y += int(self.death_vy * dt * 60)
+        
+        # Return True if Bevo has fallen off screen
+        return self.rect.top > VIRTUAL_H + 100
 
     def draw_offset(self, surf, camera_x):
         if self.invuln_timer > 0 and (self.invuln_timer // 4) % 2 == 0:
@@ -406,28 +591,53 @@ class Player:
 
 def reset_game(player):
     """Fully reset the game state: lives, score, enemies, footballs, etc."""
+    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time
+    flag_reached = False
+    win_animation_time = 0.0
+    confetti_particles = []
+    death_animation_active = False
+    death_animation_time = 0.0
+    
+    # Reset player state
     player.lives = 3
     player.score = 0
     player.invuln_timer = 0
+    player.is_dying = False
+    player.death_started = False
+    
+    # Reset footballs ONCE and set the total count correctly
     place_footballs()
     player.coins_total = len(FOOTBALLS)
     player.spawn()
 
+    # Reset enemies
     ENEMIES[:] = [
         Enemy(100, PLATFORMS[0].top, speed=1.4),
         Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
         Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
     ]
-    place_footballs()
 
 def reset_level(player):
+    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time
+    flag_reached = False
+    win_animation_time = 0.0
+    confetti_particles = []
+    death_animation_active = False
+    death_animation_time = 0.0
+    
+    player.is_dying = False
+    player.death_started = False
+    
+    # Reset footballs and update count
+    place_footballs()
+    player.coins_total = len(FOOTBALLS)
     player.spawn()
+    
     ENEMIES[:] = [
         Enemy(100, PLATFORMS[0].top, speed=1.4),
         Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
         Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
     ]
-    place_footballs()
 
 
 def draw_world(surf, camera_x):
@@ -464,8 +674,127 @@ def draw_world(surf, camera_x):
     pole = pygame.Rect(FLAG_RECT.centerx - 2 - camera_x, FLAG_RECT.top - 100, 4, 100)
     pygame.draw.rect(surf, (200, 255, 200), pole)
 
+        # --- Draw Win Animation if Bevo Reached Flag ---
+    if flag_reached:
+        draw_win_animation(surf)
 
+# --- Win Animation Setup and Functions ---
+try:
+    GOLD_HAT_IMG = pygame.image.load("assets/gold_hat.png").convert_alpha()
+except Exception:
+    GOLD_HAT_IMG = None
 
+try:
+    CONFETTI_IMG = pygame.image.load("assets/orange_confetti.png").convert_alpha()
+except Exception:
+    CONFETTI_IMG = None
+
+def spawn_confetti():
+    """Initialize confetti animation when flag is reached."""
+    global win_animation_time, confetti_particles
+    win_animation_time = 0.0
+    confetti_particles = []
+    
+    # Create initial burst of confetti particles at the top of screen
+    screen_width = VIRTUAL_W  # Use virtual screen width
+    num_particles = 50  # Number of confetti pieces
+    
+    for i in range(num_particles):
+        # Spawn confetti across the top of the screen
+        x = random.uniform(0, screen_width)
+        y = random.uniform(-100, -20)  # Start above screen
+        particle = ConfettiParticle(x, y, CONFETTI_IMG)
+        confetti_particles.append(particle)
+
+def draw_win_animation(surf):
+    """Draw win animation on the screen with pulsing gold hat in center."""
+    import math
+    global confetti_particles
+    
+    sw, sh = surf.get_size()
+    
+    # Calculate pulsing scale using sine wave (creates smooth pulsing effect)
+    pulse_speed = 3.0  # Speed of pulsing
+    min_scale = 0.8    # Minimum size (80% of original)
+    max_scale = 1.2    # Maximum size (120% of original)
+    scale_range = (max_scale - min_scale) / 2
+    base_scale = min_scale + scale_range
+    pulse_scale = base_scale + scale_range * math.sin(win_animation_time * pulse_speed)
+    
+    # Draw animated confetti particles FIRST (so they appear behind the hat)
+    for particle in confetti_particles:
+        particle.draw(surf)
+    
+    # Draw gold hat in the center of the screen with pulsing effect (AFTER confetti, so it's in front)
+    if GOLD_HAT_IMG is not None:
+        # Calculate scaled dimensions - shrink by 100 pixels
+        orig_w, orig_h = GOLD_HAT_IMG.get_size()
+        # Reduce the base size by 100 pixels width (maintain aspect ratio)
+        size_reduction = 100
+        aspect_ratio = orig_h / orig_w
+        reduced_w = max(50, orig_w - size_reduction)  # Ensure minimum size
+        reduced_h = int(reduced_w * aspect_ratio)
+        
+        scaled_w = int(reduced_w * pulse_scale)
+        scaled_h = int(reduced_h * pulse_scale)
+        
+        # Scale the image
+        scaled_hat = pygame.transform.smoothscale(GOLD_HAT_IMG, (scaled_w, scaled_h))
+        
+        # Position in center of screen, moved up 150 pixels
+        hat_x = sw // 2 - scaled_w // 2
+        hat_y = sh // 2 - scaled_h // 2 - 150  # Move up 150 pixels
+        
+        surf.blit(scaled_hat, (hat_x, hat_y))
+        
+        # Add victory text underneath the hat - SIMPLER positioning
+        victory_text = "Bevo Wins The Red River Rivalry"
+        victory_font_size = 28  # Slightly larger for visibility
+        victory_font = pygame.font.SysFont("arial", victory_font_size, bold=True)  # Try Arial font
+        victory_surf = victory_font.render(victory_text, True, (255, 140, 0))  # Orange text
+        victory_x = sw // 2 - victory_surf.get_width() // 2
+        
+        # Much simpler positioning: just place it in the bottom half of the screen
+        victory_y = int(sh * 0.75) + 50  # 75% down the screen + 50 pixels lower
+        
+        # Draw a bright white background rectangle
+        text_bg_rect = pygame.Rect(victory_x - 10, victory_y - 5, victory_surf.get_width() + 20, victory_surf.get_height() + 10)
+        pygame.draw.rect(surf, (255, 255, 255), text_bg_rect)  # Bright white background
+        
+        surf.blit(victory_surf, (victory_x, victory_y))
+        
+    else:
+        # Fallback text if no hat image - also pulsing and repositioned
+        text_scale = int(20 * pulse_scale)
+        pulsing_font = pygame.font.SysFont("consolas", text_scale)
+        text_surf = pulsing_font.render("🏆 WINNER! 🏆", True, WHITE)
+        text_x = sw // 2 - text_surf.get_width() // 2
+        text_y = sh // 2 - text_surf.get_height() // 2 - 150  # Move up 150 pixels
+        surf.blit(text_surf, (text_x, text_y))
+        
+        # Add victory text for fallback - simple positioning
+        victory_text = "Bevo Wins The Red River Rivalry"
+        victory_font_size = 28  # Fixed size
+        victory_font = pygame.font.SysFont("arial", victory_font_size, bold=True)
+        victory_surf = victory_font.render(victory_text, True, (255, 140, 0))  # Orange text
+        victory_x = sw // 2 - victory_surf.get_width() // 2
+        victory_y = int(sh * 0.75) + 50  # 75% down the screen + 50 pixels lower
+        
+        # Bright white background for visibility
+        text_bg_rect = pygame.Rect(victory_x - 10, victory_y - 5, victory_surf.get_width() + 20, victory_surf.get_height() + 10)
+        pygame.draw.rect(surf, (255, 255, 255), text_bg_rect)  # Bright white background
+            
+        surf.blit(victory_surf, (victory_x, victory_y))
+        surf.blit(victory_surf, (victory_x, victory_y))
+    
+    # Occasionally spawn new confetti to keep the effect going
+    if win_animation_time > 1.0 and random.random() < 0.3:  # 30% chance each frame after 1 second
+        # Add new confetti occasionally
+        for i in range(random.randint(1, 3)):
+            x = random.uniform(0, sw)
+            y = random.uniform(-50, -20)
+            particle = ConfettiParticle(x, y, CONFETTI_IMG)
+            confetti_particles.append(particle)
 
 def draw_hud(surf, player, msg=None):
     draw_text(surf, f"Score: {player.score}", 12, 10)
@@ -547,7 +876,7 @@ def draw_buttons(surf):
 # Async main loop (PyGBag friendly)
 # ------------------------------
 async def main():
-    global move_left, move_right, jump_pressed, started, mixer_ready, GRUNT_SFX
+    global move_left, move_right, jump_pressed, started, mixer_ready, GRUNT_SFX, flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time
 
     player = Player()
     message = None
@@ -566,9 +895,11 @@ async def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 if event.key == pygame.K_r:
-                    reset_game(player)
-                    message = "Game reset - good luck, Bevo!"
-                    message_timer = FPS
+                    # Only allow reset if not in death animation, OR if death animation finished and player is dead
+                    if not death_animation_active and (player.lives > 0 or player.lives == 0):
+                        reset_game(player)
+                        message = "Game reset - good luck, Bevo!"
+                        message_timer = FPS
                 if event.key in (pygame.K_LEFT, pygame.K_a):
                     move_left = True
                 if event.key in (pygame.K_RIGHT, pygame.K_d):
@@ -629,18 +960,59 @@ async def main():
                     jump_pressed = False
 
         # --- Update ---
-        player.update(dt, move_left, move_right, jump_pressed)
-        for e in ENEMIES:
-            e.update(dt)
+        # Only allow player movement if not in death animation
+        player_input_left = move_left if not death_animation_active else False
+        player_input_right = move_right if not death_animation_active else False
+        player_input_jump = jump_pressed if not death_animation_active else False
+        
+        death_animation_finished = player.update(dt, player_input_left, player_input_right, player_input_jump)
+        
+        # Update death animation timer
+        if death_animation_active:
+            death_animation_time += dt
+            # Check if death animation is complete (Bevo fell off screen)
+            if death_animation_finished:
+                death_animation_active = False
+                death_animation_time = 0.0
+        
+        # Only update enemies if not in death animation
+        if not death_animation_active:
+            for e in ENEMIES:
+                e.update(dt)
 
-        check_fail(player)
-        m, delta = check_enemy_collisions(player)
-        if m:
-            message = m
-            message_timer = int(FPS * 1.2)
-            player.score += delta
+        # Update win animation timer if flag is reached
+        if flag_reached:
+            win_animation_time += dt
+            
+            # Update confetti particles
+            particles_to_remove = []
+            for particle in confetti_particles:
+                if particle.update(dt):
+                    particles_to_remove.append(particle)
+            
+            # Remove expired particles
+            for particle in particles_to_remove:
+                confetti_particles.remove(particle)
 
-        won = check_win(player)
+        # Only check collisions and failures if not in death animation
+        if not death_animation_active:
+            check_fail(player)
+            m, delta = check_enemy_collisions(player)
+            if m:
+                message = m
+                message_timer = int(FPS * 1.2)
+                player.score += delta
+
+            # Create bevo_rect alias for player rectangle
+            bevo_rect = player.rect
+            
+            # Flag collision detection
+            if bevo_rect.colliderect(FLAG_RECT):
+                if not flag_reached:
+                    flag_reached = True
+                    spawn_confetti()
+
+        won = flag_reached
 
         # --- Draw to virtual surface ---
         # --- Camera logic ---
@@ -662,8 +1034,10 @@ async def main():
         if message_timer > 0:
             state_msg = message
             message_timer -= 1
-        if player.lives == 0:
+        if player.lives == 0 and not death_animation_active:
             state_msg = "Game Over! Press R to retry"
+        elif death_animation_active:
+            state_msg = ""  # No message during death animation
         elif won:
             state_msg = "🏆 Bevo Wins the Red River Showdown! Tap R to replay"
 
