@@ -27,7 +27,7 @@ Build for the web:
 # ------------------------------
 # Config
 # ------------------------------
-WORLD_WIDTH = 5000
+WORLD_WIDTH = 12000  # Epic extended level - reach the end of the image!
 VIRTUAL_W, VIRTUAL_H = 900, 540
 FPS = 60
 GRAVITY = 0.7
@@ -131,46 +131,155 @@ def draw_text(surf, text, x, y, color=UI):
 # Level geometry
 # ------------------------------
 PLATFORMS = [
-    pygame.Rect(0, VIRTUAL_H - 40, 5000, 40),  # full ground floor
+    pygame.Rect(0, VIRTUAL_H - 40, 7000, 40),  # full ground floor extended to 7000px
 
-    # --- Zone 1 (0–1000): warm-up section ---
-    pygame.Rect(100,  VIRTUAL_H - 100, 160, 20),
-    pygame.Rect(300,  VIRTUAL_H - 180, 140, 20),
-    pygame.Rect(550,  VIRTUAL_H - 260, 150, 20),
-    pygame.Rect(750,  VIRTUAL_H - 180, 160, 20),
-    pygame.Rect(950,  VIRTUAL_H - 300, 140, 20),
+    # === ZONE 1 (0-1000): Tutorial & Path Selection ===
+    # Lower path (easy route)
+    pygame.Rect(100,  VIRTUAL_H - 100, 200, 20),   # first step up
+    pygame.Rect(400,  VIRTUAL_H - 120, 180, 20),   # gentle rise
+    pygame.Rect(650,  VIRTUAL_H - 160, 200, 20),   # continue up
+    pygame.Rect(900,  VIRTUAL_H - 140, 160, 20),   # slight drop
+    
+    # Upper path (challenge route)
+    pygame.Rect(200,  VIRTUAL_H - 280, 140, 20),   # high jump start
+    pygame.Rect(480,  VIRTUAL_H - 360, 160, 20),   # very high platform
+    pygame.Rect(720,  VIRTUAL_H - 320, 180, 20),   # stay high
+    pygame.Rect(980,  VIRTUAL_H - 400, 140, 20),   # sky platform
 
-    # --- Zone 2 (1000–2000): mid-height variety ---
-    pygame.Rect(1150, VIRTUAL_H - 220, 180, 20),
-    pygame.Rect(1350, VIRTUAL_H - 320, 160, 20),
-    pygame.Rect(1550, VIRTUAL_H - 140, 160, 20),
-    pygame.Rect(1750, VIRTUAL_H - 240, 200, 20),
-    pygame.Rect(1950, VIRTUAL_H - 160, 180, 20),
-    pygame.Rect(1850, VIRTUAL_H - 80, 120, 20),  # low bounce recovery
+    # === ZONE 2 (1000-2000): Multi-Path Divergence ===
+    # Lower-middle path
+    pygame.Rect(1100, VIRTUAL_H - 180, 180, 20),
+    pygame.Rect(1350, VIRTUAL_H - 200, 160, 20),
+    pygame.Rect(1600, VIRTUAL_H - 160, 200, 20),
+    pygame.Rect(1850, VIRTUAL_H - 220, 180, 20),
+    
+    # Middle path (main route)
+    pygame.Rect(1200, VIRTUAL_H - 280, 160, 20),
+    pygame.Rect(1450, VIRTUAL_H - 320, 180, 20),
+    pygame.Rect(1700, VIRTUAL_H - 300, 160, 20),
+    pygame.Rect(1900, VIRTUAL_H - 340, 180, 20),
+    
+    # Upper path (continues high)
+    pygame.Rect(1150, VIRTUAL_H - 420, 140, 20),
+    pygame.Rect(1400, VIRTUAL_H - 460, 160, 20),
+    pygame.Rect(1650, VIRTUAL_H - 440, 180, 20),
+    pygame.Rect(1950, VIRTUAL_H - 480, 140, 20),   # near ceiling
 
-    # --- Zone 3 (2000–3000): layered climb zone ---
-    pygame.Rect(2100, VIRTUAL_H - 300, 160, 20),
-    pygame.Rect(2300, VIRTUAL_H - 220, 160, 20),
-    pygame.Rect(2500, VIRTUAL_H - 140, 180, 20),
-    pygame.Rect(2650, VIRTUAL_H - 240, 180, 20),
-    pygame.Rect(2800, VIRTUAL_H - 100, 180, 20),
-    pygame.Rect(2950, VIRTUAL_H - 320, 140, 20),
+    # === ZONE 3 (2000-3000): Interconnected Maze ===
+    # Connecting platforms (path switching opportunities)
+    pygame.Rect(2100, VIRTUAL_H - 160, 120, 20),   # low connector
+    pygame.Rect(2100, VIRTUAL_H - 260, 120, 20),   # mid connector  
+    pygame.Rect(2100, VIRTUAL_H - 380, 120, 20),   # high connector
+    
+    # Lower maze section
+    pygame.Rect(2300, VIRTUAL_H - 140, 180, 20),
+    pygame.Rect(2550, VIRTUAL_H - 180, 160, 20),
+    pygame.Rect(2800, VIRTUAL_H - 120, 200, 20),
+    
+    # Middle maze section
+    pygame.Rect(2350, VIRTUAL_H - 280, 160, 20),
+    pygame.Rect(2580, VIRTUAL_H - 320, 180, 20),
+    pygame.Rect(2850, VIRTUAL_H - 260, 180, 20),
+    
+    # Upper maze section
+    pygame.Rect(2280, VIRTUAL_H - 420, 140, 20),
+    pygame.Rect(2500, VIRTUAL_H - 460, 160, 20),
+    pygame.Rect(2750, VIRTUAL_H - 400, 180, 20),
 
-    # --- Zone 4 (3000–4000): vertical maze (stadium mid section) ---
-    pygame.Rect(3100, VIRTUAL_H - 260, 180, 20),
-    pygame.Rect(3300, VIRTUAL_H - 180, 160, 20),
-    pygame.Rect(3500, VIRTUAL_H - 320, 200, 20),
-    pygame.Rect(3700, VIRTUAL_H - 240, 180, 20),
-    pygame.Rect(3850, VIRTUAL_H - 120, 160, 20),
-    pygame.Rect(3950, VIRTUAL_H - 340, 150, 20),  # top “sky box”
+    # === ZONE 4 (3000-4000): Vertical Challenge Tower ===
+    # Multi-tier climbing section
+    pygame.Rect(3100, VIRTUAL_H - 140, 160, 20),   # base level
+    pygame.Rect(3350, VIRTUAL_H - 200, 140, 20),   # step up
+    pygame.Rect(3200, VIRTUAL_H - 280, 160, 20),   # zigzag back
+    pygame.Rect(3450, VIRTUAL_H - 340, 140, 20),   # continue up
+    pygame.Rect(3300, VIRTUAL_H - 420, 160, 20),   # near top
+    pygame.Rect(3550, VIRTUAL_H - 460, 140, 20),   # peak platform
+    
+    # Alternative lower route through zone 4
+    pygame.Rect(3650, VIRTUAL_H - 160, 200, 20),   # bypass low
+    pygame.Rect(3900, VIRTUAL_H - 200, 180, 20),   # gentle climb  # top “sky box”
 
-    # --- Zone 5 (4000–5000): finale ramp to flag ---
-    pygame.Rect(4100, VIRTUAL_H - 200, 180, 20),
-    pygame.Rect(4300, VIRTUAL_H - 280, 200, 20),
-    pygame.Rect(4500, VIRTUAL_H - 160, 180, 20),
-    pygame.Rect(4700, VIRTUAL_H - 260, 200, 20),
-    pygame.Rect(4900, VIRTUAL_H - 140, 180, 20),
-    pygame.Rect(5050, VIRTUAL_H - 320, 180, 20),  # final jump-up
+    # === ZONE 5 (4000-5000): Final Approaches ===
+    # Multiple final paths to flag
+    
+    # High dramatic approach
+    pygame.Rect(4100, VIRTUAL_H - 400, 160, 20),   # high start
+    pygame.Rect(4350, VIRTUAL_H - 360, 180, 20),   # descent begins
+    pygame.Rect(4600, VIRTUAL_H - 280, 160, 20),   # coming down
+    pygame.Rect(4820, VIRTUAL_H - 200, 180, 20),   # final high platform
+    
+    # Middle steady approach  
+    pygame.Rect(4150, VIRTUAL_H - 260, 180, 20),   # mid-level start
+    pygame.Rect(4400, VIRTUAL_H - 240, 160, 20),   # steady progress
+    pygame.Rect(4650, VIRTUAL_H - 220, 180, 20),   # approach flag level
+    
+    # Lower safe approach
+    pygame.Rect(4200, VIRTUAL_H - 160, 200, 20),   # low but safe
+    pygame.Rect(4500, VIRTUAL_H - 140, 160, 20),   # easy progression
+    pygame.Rect(4750, VIRTUAL_H - 120, 180, 20),   # safe final jump
+    
+    # Victory platform (where flag sits)
+    pygame.Rect(4950, VIRTUAL_H - 200, 100, 20),   # flag platform
+
+    # === ZONE 6 (5000-6000): Extended Challenge Gauntlet ===
+    # Lower tier platforms
+    pygame.Rect(5100, VIRTUAL_H - 120, 180, 20),   # continuation from zone 5
+    pygame.Rect(5350, VIRTUAL_H - 140, 160, 20),   # gentle rise
+    pygame.Rect(5600, VIRTUAL_H - 180, 200, 20),   # step up
+    pygame.Rect(5850, VIRTUAL_H - 160, 180, 20),   # slight drop
+    
+    # Middle tier platforms
+    pygame.Rect(5150, VIRTUAL_H - 240, 160, 20),   # mid-level progression
+    pygame.Rect(5400, VIRTUAL_H - 280, 180, 20),   # climb higher
+    pygame.Rect(5650, VIRTUAL_H - 320, 160, 20),   # peak middle
+    pygame.Rect(5900, VIRTUAL_H - 260, 200, 20),   # descent back
+    
+    # Upper tier platforms (high skill)
+    pygame.Rect(5200, VIRTUAL_H - 380, 140, 20),   # high start
+    pygame.Rect(5450, VIRTUAL_H - 420, 160, 20),   # very high
+    pygame.Rect(5700, VIRTUAL_H - 460, 140, 20),   # near ceiling
+    pygame.Rect(5950, VIRTUAL_H - 400, 180, 20),   # high descent
+    
+    # Connector platforms for path switching
+    pygame.Rect(5300, VIRTUAL_H - 200, 120, 20),   # low-mid connector
+    pygame.Rect(5550, VIRTUAL_H - 340, 120, 20),   # mid-high connector
+    pygame.Rect(5800, VIRTUAL_H - 220, 120, 20),   # another low-mid connector
+
+    # === ZONE 7 (6000-7000): Final Epic Challenge ===
+    # Epic staircase section (multiple routes to grand finale)
+    
+    # Lower epic route
+    pygame.Rect(6100, VIRTUAL_H - 140, 160, 20),   # epic start low
+    pygame.Rect(6350, VIRTUAL_H - 120, 180, 20),   # steady low
+    pygame.Rect(6600, VIRTUAL_H - 160, 160, 20),   # rise slightly
+    pygame.Rect(6850, VIRTUAL_H - 180, 200, 20),   # final low approach
+    
+    # Middle epic route
+    pygame.Rect(6150, VIRTUAL_H - 260, 180, 20),   # epic start mid
+    pygame.Rect(6400, VIRTUAL_H - 300, 160, 20),   # climb up
+    pygame.Rect(6650, VIRTUAL_H - 280, 180, 20),   # plateau
+    pygame.Rect(6900, VIRTUAL_H - 240, 160, 20),   # final mid approach
+    
+    # Upper epic route (extreme challenge)
+    pygame.Rect(6120, VIRTUAL_H - 420, 140, 20),   # epic start high
+    pygame.Rect(6380, VIRTUAL_H - 460, 160, 20),   # maximum height
+    pygame.Rect(6620, VIRTUAL_H - 480, 140, 20),   # ceiling platform
+    pygame.Rect(6870, VIRTUAL_H - 440, 180, 20),   # epic descent
+    
+    # Grand finale connecting platforms
+    pygame.Rect(6050, VIRTUAL_H - 180, 120, 20),   # zone 6-7 connector low
+    pygame.Rect(6050, VIRTUAL_H - 320, 120, 20),   # zone 6-7 connector mid
+    pygame.Rect(6050, VIRTUAL_H - 380, 120, 20),   # zone 6-7 connector high
+    
+    # Final challenge zigzag
+    pygame.Rect(6200, VIRTUAL_H - 340, 140, 20),   # zigzag start
+    pygame.Rect(6450, VIRTUAL_H - 380, 120, 20),   # zigzag up
+    pygame.Rect(6700, VIRTUAL_H - 360, 140, 20),   # zigzag middle
+    pygame.Rect(6950, VIRTUAL_H - 320, 120, 20),   # zigzag final
+    
+    # Ultimate victory platforms leading to new flag position
+    pygame.Rect(6980, VIRTUAL_H - 200, 100, 20),   # penultimate platform
+    pygame.Rect(7050, VIRTUAL_H - 160, 100, 20),   # final victory platform
 
 ]
 
@@ -262,36 +371,37 @@ class ConfettiParticle:
 
 def place_footballs():
     global FOOTBALLS
-FOOTBALLS = [
-    # --- Zone 1 ---
-    pygame.Rect(180,  VIRTUAL_H - 140, 18, 12),
-    pygame.Rect(400,  VIRTUAL_H - 220, 18, 12),
-    pygame.Rect(720,  VIRTUAL_H - 200, 18, 12),
-    pygame.Rect(940,  VIRTUAL_H - 340, 18, 12),
-
-    # --- Zone 2 ---
-    pygame.Rect(1220, VIRTUAL_H - 260, 18, 12),
-    pygame.Rect(1480, VIRTUAL_H - 180, 18, 12),
-    pygame.Rect(1720, VIRTUAL_H - 280, 18, 12),
-    pygame.Rect(1920, VIRTUAL_H - 100, 18, 12),
-
-    # --- Zone 3 ---
-    pygame.Rect(2200, VIRTUAL_H - 340, 18, 12),
-    pygame.Rect(2380, VIRTUAL_H - 260, 18, 12),
-    pygame.Rect(2600, VIRTUAL_H - 180, 18, 12),
-    pygame.Rect(2900, VIRTUAL_H - 360, 18, 12),
-
-    # --- Zone 4 ---
-    pygame.Rect(3150, VIRTUAL_H - 300, 18, 12),
-    pygame.Rect(3550, VIRTUAL_H - 360, 18, 12),
-    pygame.Rect(3800, VIRTUAL_H - 160, 18, 12),
-
-    # --- Zone 5 ---
-    pygame.Rect(4220, VIRTUAL_H - 240, 18, 12),
-    pygame.Rect(4470, VIRTUAL_H - 200, 18, 12),
-    pygame.Rect(4720, VIRTUAL_H - 300, 18, 12),
-    pygame.Rect(4980, VIRTUAL_H - 200, 18, 12),   # brought in and lowered
-]
+    FOOTBALLS = []
+    
+    # Place footballs on platforms throughout the extended 7000px level
+    # Distribute evenly across all elevated platforms (skip ground floor platform[0])
+    selected_platforms = [
+        # Zone 1 platforms
+        1, 2, 3, 4, 5, 6, 7, 8,
+        # Zone 2 platforms  
+        9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        # Zone 3 platforms
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        # Zone 4 platforms
+        33, 34, 35, 36, 37, 38, 39, 40,
+        # Zone 5 platforms  
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+        # Zone 6 platforms (NEW)
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+        # Zone 7 platforms (NEW)
+        65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81
+    ]
+    
+    # Select every 3rd platform to get good distribution (about 25-27 footballs total)
+    football_platforms = selected_platforms[::3]  # Every 3rd platform
+    
+    for platform_idx in football_platforms:
+        if platform_idx < len(PLATFORMS):
+            platform = PLATFORMS[platform_idx]
+            # Place football in center of platform, slightly above it
+            football_x = platform.centerx - 9  # center the 18px wide football
+            football_y = platform.top - 15     # place above platform
+            FOOTBALLS.append(pygame.Rect(football_x, football_y, 18, 12))
 
 
 
@@ -419,25 +529,45 @@ class Enemy:
 
 
 ENEMIES = [
-    # Zone 1
-    Enemy(300,  PLATFORMS[1].top,  speed=1.2),
-    Enemy(800,  PLATFORMS[4].top,  speed=1.2),
+    # Zone 1 - placed on lower path platforms for easier introduction
+    Enemy(500,  PLATFORMS[2].top,  speed=1.1),   # on gentle rise platform (x=400)
+    Enemy(750,  PLATFORMS[4].top,  speed=1.1),   # on slight drop platform (x=900)
 
-    # Zone 2
-    Enemy(1400, PLATFORMS[7].top,  speed=1.3),
-    Enemy(1750, PLATFORMS[9].top,  speed=1.3),
+    # Zone 2 - spread across different height paths  
+    Enemy(1200, PLATFORMS[9].top,  speed=1.2),   # lower-middle path (x=1100)
+    Enemy(1500, PLATFORMS[13].top, speed=1.3),   # middle path (x=1200)
+    Enemy(1750, PLATFORMS[16].top, speed=1.2),   # middle path (x=1900)
 
-    # Zone 3
-    Enemy(2300, PLATFORMS[12].top, speed=1.3),
-    Enemy(2650, PLATFORMS[14].top, speed=1.3),
+    # Zone 3 - maze section enemies on connectors and main paths
+    Enemy(2120, PLATFORMS[21].top, speed=1.3),   # low connector platform (x=2100)
+    Enemy(2400, PLATFORMS[24].top, speed=1.3),   # lower maze section (x=2300)
+    Enemy(2600, PLATFORMS[27].top, speed=1.4),   # middle maze section (x=2350)
+    Enemy(2350, PLATFORMS[30].top, speed=1.3),   # upper maze section (x=2280)
 
-    # Zone 4
-    Enemy(3300, PLATFORMS[17].top, speed=1.4),
-    Enemy(3750, PLATFORMS[20].top, speed=1.4),
+    # Zone 4 - tower climbing challenges
+    Enemy(3200, PLATFORMS[33].top, speed=1.4),   # base level (x=3100)
+    Enemy(3400, PLATFORMS[34].top, speed=1.4),   # step up (x=3350)
+    Enemy(3500, PLATFORMS[36].top, speed=1.4),   # continue up (x=3450)
+    Enemy(3750, PLATFORMS[39].top, speed=1.3),   # bypass low (x=3650)
 
-    # Zone 5
-    Enemy(4400, PLATFORMS[24].top, speed=1.5),
-    Enemy(4850, PLATFORMS[26].top, speed=1.5),
+    # Zone 5 - final approach guards
+    Enemy(4200, PLATFORMS[45].top, speed=1.4),   # middle steady approach (x=4150)
+    Enemy(4550, PLATFORMS[49].top, speed=1.5),   # lower safe approach (x=4500)
+    
+    # Zone 6 - extended challenge gauntlet
+    Enemy(5200, PLATFORMS[53].top, speed=1.3),   # lower tier (x=5100)
+    Enemy(5450, PLATFORMS[55].top, speed=1.4),   # middle tier (x=5400)
+    Enemy(5750, PLATFORMS[58].top, speed=1.5),   # upper tier (x=5700)
+    Enemy(5320, PLATFORMS[62].top, speed=1.3),   # connector platform (x=5300)
+    Enemy(5920, PLATFORMS[56].top, speed=1.4),   # middle tier end (x=5900)
+    
+    # Zone 7 - final epic challenge
+    Enemy(6200, PLATFORMS[66].top, speed=1.4),   # epic start low (x=6100)
+    Enemy(6450, PLATFORMS[68].top, speed=1.5),   # middle epic (x=6400)
+    Enemy(6700, PLATFORMS[71].top, speed=1.6),   # upper epic (x=6620)
+    Enemy(6250, PLATFORMS[76].top, speed=1.5),   # zigzag challenge (x=6200)
+    Enemy(6850, PLATFORMS[67].top, speed=1.5),   # final mid approach (x=6900)
+    Enemy(7000, PLATFORMS[80].top, speed=1.6),   # penultimate platform (x=6980)
 ]
 
 
@@ -450,7 +580,9 @@ class Player:
         self.score = 0
         self.facing_right = True
         self.invuln_timer = 0
-        self.coins_total = len(FOOTBALLS)
+        # Explicitly set football count for extended level
+        self.coins_total = 27  # Updated for extended 7000px level with more footballs
+        self.coins_collected = 0  # Track collected separately
         # Death animation state
         self.is_dying = False
         self.death_vx = 0
@@ -522,6 +654,7 @@ class Player:
         for fb in FOOTBALLS[:]:
             if self.rect.colliderect(fb):
                 FOOTBALLS.remove(fb)
+                self.coins_collected += 1  # Track collected count
                 self.score += 100
 
         if self.invuln_timer > 0:
@@ -591,7 +724,7 @@ class Player:
 
 def reset_game(player):
     """Fully reset the game state: lives, score, enemies, footballs, etc."""
-    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time
+    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time, FOOTBALLS
     flag_reached = False
     win_animation_time = 0.0
     confetti_particles = []
@@ -604,21 +737,60 @@ def reset_game(player):
     player.invuln_timer = 0
     player.is_dying = False
     player.death_started = False
+    player.coins_collected = 0  # Reset collected count
     
     # Reset footballs ONCE and set the total count correctly
     place_footballs()
-    player.coins_total = len(FOOTBALLS)
+    # Always set to 27 - the correct total number of footballs for extended level
+    player.coins_total = 27
+    print(f"DEBUG: Reset game - footballs placed: {len(FOOTBALLS)}, player.coins_total set to: {player.coins_total}")
     player.spawn()
 
-    # Reset enemies
+    # Reset enemies to original layout
     ENEMIES[:] = [
-        Enemy(100, PLATFORMS[0].top, speed=1.4),
-        Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
-        Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
+        # Zone 1 - placed on lower path platforms for easier introduction
+        Enemy(500,  PLATFORMS[2].top,  speed=1.1),   # on gentle rise platform (x=400)
+        Enemy(750,  PLATFORMS[4].top,  speed=1.1),   # on slight drop platform (x=900)
+
+        # Zone 2 - spread across different height paths  
+        Enemy(1200, PLATFORMS[9].top,  speed=1.2),   # lower-middle path (x=1100)
+        Enemy(1500, PLATFORMS[13].top, speed=1.3),   # middle path (x=1200)
+        Enemy(1750, PLATFORMS[16].top, speed=1.2),   # middle path (x=1900)
+
+        # Zone 3 - maze section enemies on connectors and main paths
+        Enemy(2120, PLATFORMS[21].top, speed=1.3),   # low connector platform (x=2100)
+        Enemy(2400, PLATFORMS[24].top, speed=1.3),   # lower maze section (x=2300)
+        Enemy(2600, PLATFORMS[27].top, speed=1.4),   # middle maze section (x=2350)
+        Enemy(2350, PLATFORMS[30].top, speed=1.3),   # upper maze section (x=2280)
+
+        # Zone 4 - tower climbing challenges
+        Enemy(3200, PLATFORMS[33].top, speed=1.4),   # base level (x=3100)
+        Enemy(3400, PLATFORMS[34].top, speed=1.4),   # step up (x=3350)
+        Enemy(3500, PLATFORMS[36].top, speed=1.4),   # continue up (x=3450)
+        Enemy(3750, PLATFORMS[39].top, speed=1.3),   # bypass low (x=3650)
+
+        # Zone 5 - final approach guards
+        Enemy(4200, PLATFORMS[45].top, speed=1.4),   # middle steady approach (x=4150)
+        Enemy(4550, PLATFORMS[49].top, speed=1.5),   # lower safe approach (x=4500)
+        
+        # Zone 6 - extended challenge gauntlet
+        Enemy(5200, PLATFORMS[53].top, speed=1.3),   # lower tier (x=5100)
+        Enemy(5450, PLATFORMS[55].top, speed=1.4),   # middle tier (x=5400)
+        Enemy(5750, PLATFORMS[58].top, speed=1.5),   # upper tier (x=5700)
+        Enemy(5320, PLATFORMS[62].top, speed=1.3),   # connector platform (x=5300)
+        Enemy(5920, PLATFORMS[56].top, speed=1.4),   # middle tier end (x=5900)
+        
+        # Zone 7 - final epic challenge
+        Enemy(6200, PLATFORMS[66].top, speed=1.4),   # epic start low (x=6100)
+        Enemy(6450, PLATFORMS[68].top, speed=1.5),   # middle epic (x=6400)
+        Enemy(6700, PLATFORMS[71].top, speed=1.6),   # upper epic (x=6620)
+        Enemy(6250, PLATFORMS[76].top, speed=1.5),   # zigzag challenge (x=6200)
+        Enemy(6850, PLATFORMS[67].top, speed=1.5),   # final mid approach (x=6900)
+        Enemy(7000, PLATFORMS[80].top, speed=1.6),   # penultimate platform (x=6980)
     ]
 
 def reset_level(player):
-    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time
+    global flag_reached, win_animation_time, confetti_particles, death_animation_active, death_animation_time, FOOTBALLS
     flag_reached = False
     win_animation_time = 0.0
     confetti_particles = []
@@ -627,16 +799,55 @@ def reset_level(player):
     
     player.is_dying = False
     player.death_started = False
+    player.coins_collected = 0  # Reset collected count
     
     # Reset footballs and update count
     place_footballs()
-    player.coins_total = len(FOOTBALLS)
+    # Always set to 27 - the correct total number of footballs for extended level
+    player.coins_total = 27
+    print(f"DEBUG: Reset level - footballs placed: {len(FOOTBALLS)}, player.coins_total set to: {player.coins_total}")
     player.spawn()
     
     ENEMIES[:] = [
-        Enemy(100, PLATFORMS[0].top, speed=1.4),
-        Enemy(PLATFORMS[1].left + 10, PLATFORMS[1].top, speed=1.4),
-        Enemy(PLATFORMS[2].left + 10, PLATFORMS[2].top, speed=1.4),
+        # Zone 1 - placed on lower path platforms for easier introduction
+        Enemy(500,  PLATFORMS[2].top,  speed=1.1),   # on gentle rise platform (x=400)
+        Enemy(750,  PLATFORMS[4].top,  speed=1.1),   # on slight drop platform (x=900)
+
+        # Zone 2 - spread across different height paths  
+        Enemy(1200, PLATFORMS[9].top,  speed=1.2),   # lower-middle path (x=1100)
+        Enemy(1500, PLATFORMS[13].top, speed=1.3),   # middle path (x=1200)
+        Enemy(1750, PLATFORMS[16].top, speed=1.2),   # middle path (x=1900)
+
+        # Zone 3 - maze section enemies on connectors and main paths
+        Enemy(2120, PLATFORMS[21].top, speed=1.3),   # low connector platform (x=2100)
+        Enemy(2400, PLATFORMS[24].top, speed=1.3),   # lower maze section (x=2300)
+        Enemy(2600, PLATFORMS[27].top, speed=1.4),   # middle maze section (x=2350)
+        Enemy(2350, PLATFORMS[30].top, speed=1.3),   # upper maze section (x=2280)
+
+        # Zone 4 - tower climbing challenges
+        Enemy(3200, PLATFORMS[33].top, speed=1.4),   # base level (x=3100)
+        Enemy(3400, PLATFORMS[34].top, speed=1.4),   # step up (x=3350)
+        Enemy(3500, PLATFORMS[36].top, speed=1.4),   # continue up (x=3450)
+        Enemy(3750, PLATFORMS[39].top, speed=1.3),   # bypass low (x=3650)
+
+        # Zone 5 - final approach guards
+        Enemy(4200, PLATFORMS[45].top, speed=1.4),   # middle steady approach (x=4150)
+        Enemy(4550, PLATFORMS[49].top, speed=1.5),   # lower safe approach (x=4500)
+        
+        # Zone 6 - extended challenge gauntlet
+        Enemy(5200, PLATFORMS[53].top, speed=1.3),   # lower tier (x=5100)
+        Enemy(5450, PLATFORMS[55].top, speed=1.4),   # middle tier (x=5400)
+        Enemy(5750, PLATFORMS[58].top, speed=1.5),   # upper tier (x=5700)
+        Enemy(5320, PLATFORMS[62].top, speed=1.3),   # connector platform (x=5300)
+        Enemy(5920, PLATFORMS[56].top, speed=1.4),   # middle tier end (x=5900)
+        
+        # Zone 7 - final epic challenge
+        Enemy(6200, PLATFORMS[66].top, speed=1.4),   # epic start low (x=6100)
+        Enemy(6450, PLATFORMS[68].top, speed=1.5),   # middle epic (x=6400)
+        Enemy(6700, PLATFORMS[71].top, speed=1.6),   # upper epic (x=6620)
+        Enemy(6250, PLATFORMS[76].top, speed=1.5),   # zigzag challenge (x=6200)
+        Enemy(6850, PLATFORMS[67].top, speed=1.5),   # final mid approach (x=6900)
+        Enemy(7000, PLATFORMS[80].top, speed=1.6),   # penultimate platform (x=6980)
     ]
 
 
@@ -798,7 +1009,8 @@ def draw_win_animation(surf):
 
 def draw_hud(surf, player, msg=None):
     draw_text(surf, f"Score: {player.score}", 12, 10)
-    draw_text(surf, f"Footballs: {player.coins_total - len(FOOTBALLS)}/{player.coins_total}", 12, 34)
+    # Use explicit collected count instead of calculation
+    draw_text(surf, f"Footballs: {player.coins_collected}/{player.coins_total}", 12, 34)
     draw_text(surf, f"Lives: {player.lives}", 12, 58)
     if msg:
         draw_text(surf, msg, VIRTUAL_W//2 - 200, 10, color=WHITE)
